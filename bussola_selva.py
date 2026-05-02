@@ -172,6 +172,7 @@ elif st.session_state.step == 5:
                 st.warning("por favor, preencha todos os campos para continuarmos.")
 
 # ── passo 6: processamento e resultado ───────────────────────────────────────
+# ── passo 6: processamento e resultado dinâmico ──────────────────────────────
 elif st.session_state.step == 6:
     nome_casal = st.session_state.answers['lead']['nome']
     
@@ -185,19 +186,41 @@ elif st.session_state.step == 6:
     </div>
     """, unsafe_allow_html=True)
     
-    # Lógica simples baseada nas respostas para personalizar o dossiê
-    bio_vs_tech = "uma forte conexão com a natureza e design biofílico" if "jardim" in st.session_state.answers['manha'] else "integração tecnológica e conforto invisível"
-    foco_social = "a cozinha gourmet será o coração pulsante da casa" if "cozinha" in st.session_state.answers['social'] else "a área externa será o refúgio perfeito para encontros"
-    medo = st.session_state.answers['medo'].split(',')[0]
-    
-    # Dossiê
+    # 1. Lógica da Atmosfera (Manhã Ideal)
+    if "jardim" in st.session_state.answers['manha']:
+        atmosfera = "uma forte conexão com a natureza, utilizando design biofílico, jardins internos e luz natural abundante"
+    else:
+        atmosfera = "uma integração tecnológica total, com automação discreta e conforto invisível ditando o ritmo da rotina"
+
+    # 2. Lógica do Coração da Casa (Conexão Social)
+    if "cozinha" in st.session_state.answers['social']:
+        coracao = "onde uma cozinha gourmet ampla e integrada será o coração pulsante da casa"
+    else:
+        coracao = "onde as áreas externas, com fogo de chão ou piscina natural, se tornam o refúgio perfeito para encontros"
+
+    # 3. Lógica do Sistema Construtivo (Investimento)
+    if "sustentabilidade" in st.session_state.answers['investimento']:
+        sistema = "como vocês valorizam economia de longo prazo, recomendamos fortemente sistemas construtivos modernos e sustentáveis, como o wood frame ou steel frame. eles oferecem conforto térmico superior e facilitam a integração com painéis solares e cisternas, zerando suas preocupações futuras."
+    else:
+        sistema = "como o foco de vocês está no melhor balanço do custo imediato, nossa estratégia será focar em um projeto executivo extremamente detalhado. isso permite otimizar o uso de materiais construtivos e alcançar uma estética de alto padrão sem desperdícios na execução."
+
+    # 4. Lógica da Solução do Medo (Dores do cliente)
+    if "caos" in st.session_state.answers['medo']:
+        solucao_dor = "sabemos que a imprevisibilidade da obra tira o sono de vocês. para garantir um cronograma cravado e uma obra limpa, a industrialização da construção aliada ao nosso detalhamento rigoroso de projeto será a chave para blindar a saúde mental de vocês."
+    elif "orçamento" in st.session_state.answers['medo']:
+        solucao_dor = "notamos que estourar o orçamento é o maior receio de vocês. o antídoto para isso é a tecnologia que utilizamos em nosso escritório: nós construímos a sua casa virtualmente antes do primeiro tijolo, garantindo quantitativos exatos e blindando o seu bolso contra surpresas."
+    else:
+        solucao_dor = "percebemos que o pavor de vocês é acabar com uma 'casa de catálogo'. nosso compromisso será desenhar uma arquitetura com identidade profunda, fugindo de tendências genéricas e criando detalhes únicos que reflitam exclusivamente a história do casal."
+
+    # Dossiê Dinâmico
     st.markdown(f"""
     <div class="dossier-box">
         <div class="dossier-title">✦ dossiê de viabilidade selva</div>
         <div class="dossier-text">
-            analisamos o perfil de vocês e o resultado é claro: o projeto ideal exige {bio_vs_tech}, onde {foco_social}.<br><br>
-            notamos que a maior preocupação de vocês é {medo}. por isso, o sistema construtivo perfeito para o seu perfil (como o woodframe ou steel frame) atrelado a um projeto executivo milimetricamente detalhado será essencial. isso blinda o investimento de vocês contra surpresas.<br><br>
-            vocês valorizam um ecossistema completo — não apenas a planta, mas uma habitação de alto desempenho que respeite a história e a rotina da família.
+            analisamos o perfil de vocês e a visão está clara: o projeto ideal exige {atmosfera}, {coracao}.<br><br>
+            {sistema}<br><br>
+            além disso, {solucao_dor}<br><br>
+            vocês não precisam de apenas uma planta. vocês precisam de um ecossistema completo e pensado para a vida de vocês.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -232,17 +255,10 @@ elif st.session_state.step == 6:
                     WhatsApp: {st.session_state.answers['lead']['whatsapp']}
                     
                     RESPOSTAS DO DIAGNÓSTICO:
-                    1. Manhã Ideal (Biofilia x Tech):
-                    {st.session_state.answers['manha']}
-                    
-                    2. Conexão Social (Layout):
-                    {st.session_state.answers['social']}
-                    
-                    3. Investimento (Sustentabilidade x Custo):
-                    {st.session_state.answers['investimento']}
-                    
-                    4. Maior Preocupação (Dores):
-                    {st.session_state.answers['medo']}
+                    1. Manhã Ideal: {st.session_state.answers['manha']}
+                    2. Conexão Social: {st.session_state.answers['social']}
+                    3. Investimento: {st.session_state.answers['investimento']}
+                    4. Maior Preocupação: {st.session_state.answers['medo']}
                     
                     ---
                     Este e-mail foi gerado automaticamente pelo aplicativo Bússola Selva.
