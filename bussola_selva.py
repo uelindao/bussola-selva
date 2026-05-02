@@ -14,11 +14,11 @@ st.markdown("""
 html,body,.stApp{background:#161615!important;color:#EAE8E3!important;font-family:'Inter',sans-serif!important;}
 .stApp::before{display:none!important;}
 
-/* Cabeçalho com caixa verde escuro */
+/* cabeçalho com caixa verde escuro */
 .arch-header{
     text-align:center;
     padding: 2.5rem 1.5rem;
-    background-color: #1A291E; /* Verde do escritório */
+    background-color: #1A291E;
     border: 1px solid #2E4534;
     border-radius: 8px;
     margin-bottom: 2rem;
@@ -28,10 +28,9 @@ html,body,.stApp{background:#161615!important;color:#EAE8E3!important;font-famil
 color:#EAE8E3!important;line-height:1.1;margin-bottom:0.6rem;text-transform:lowercase;}
 .arch-header p{color:#8C8881;font-size:1rem;font-family:'Inter',sans-serif;letter-spacing:0.02em;text-transform:lowercase; margin: 0;}
 
-.question-box {background:#1C1B1A; padding: 2rem; border: 1px solid #2A2928; margin-top: 2rem; border-radius: 4px;}
 .question-title {font-family:'Montserrat',sans-serif; font-size:1.2rem; color:#EAE8E3; margin-bottom: 1.5rem; text-transform:lowercase; font-weight: 500;}
 
-/* Estilo das opções - removido o label invisível que causava o retângulo */
+/* estilo das opções - removido o label invisível que causava o retângulo */
 .stRadio > div {display: flex; flex-direction: column; gap: 1rem;}
 .stRadio > div > label {
     background:#121211!important; border:1px solid #2A2928!important; padding: 1rem!important; 
@@ -93,8 +92,7 @@ if st.session_state.step == 0:
 
 # ── passo 1: a manhã ideal (biofilia vs tech) ────────────────────────────────
 elif st.session_state.step == 1:
-    st.markdown('<div class="question-box">', unsafe_allow_html=True)
-    st.markdown('<div class="question-title">1. como é a sua manhã ideal na nova casa?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-title" style="margin-top: 2rem;">1. como é a sua manhã ideal na nova casa?</div>', unsafe_allow_html=True)
     
     q1 = st.radio("escolha:", [
         "acordar com a luz do sol filtrada por um jardim denso e tomar café sentindo a brisa",
@@ -105,12 +103,10 @@ elif st.session_state.step == 1:
         st.session_state.answers['manha'] = q1
         next_step()
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ── passo 2: conexão social ──────────────────────────────────────────────────
 elif st.session_state.step == 2:
-    st.markdown('<div class="question-box">', unsafe_allow_html=True)
-    st.markdown('<div class="question-title">2. quando recebem amigos, onde a magia acontece?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-title" style="margin-top: 2rem;">2. quando recebem amigos, onde a magia acontece?</div>', unsafe_allow_html=True)
     
     q2 = st.radio("escolha:", [
         "em uma cozinha gourmet espaçosa, integrando quem cozinha e quem conversa",
@@ -121,12 +117,10 @@ elif st.session_state.step == 2:
         st.session_state.answers['social'] = q2
         next_step()
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ── passo 3: objeção silenciosa (valor vs preço) ─────────────────────────────
 elif st.session_state.step == 3:
-    st.markdown('<div class="question-box">', unsafe_allow_html=True)
-    st.markdown('<div class="question-title">3. ao pensar no investimento, o que faz mais sentido para vocês?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-title" style="margin-top: 2rem;">3. ao pensar no investimento, o que faz mais sentido para vocês?</div>', unsafe_allow_html=True)
     
     q3 = st.radio("escolha:", [
         "sustentabilidade inteligente que gera economia futura (solar, cisterna), mesmo exigindo maior investimento inicial",
@@ -137,12 +131,10 @@ elif st.session_state.step == 3:
         st.session_state.answers['investimento'] = q3
         next_step()
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ── passo 4: medos reais ─────────────────────────────────────────────────────
 elif st.session_state.step == 4:
-    st.markdown('<div class="question-box">', unsafe_allow_html=True)
-    st.markdown('<div class="question-title">4. qual é a sua maior preocupação ao pensar em construir?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-title" style="margin-top: 2rem;">4. qual é a sua maior preocupação ao pensar em construir?</div>', unsafe_allow_html=True)
     
     q4 = st.radio("escolha:", [
         "a obra virar um caos, com imprevisibilidade, retrabalhos e atrasos",
@@ -154,7 +146,6 @@ elif st.session_state.step == 4:
         st.session_state.answers['medo'] = q4
         next_step()
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ── passo 5: captação do lead e envio de e-mail ──────────────────────────────
 elif st.session_state.step == 5:
@@ -176,26 +167,15 @@ elif st.session_state.step == 5:
             if nome and email and whatsapp:
                 st.session_state.answers['lead'] = {'nome': nome, 'email': email, 'whatsapp': whatsapp}
                 
-                # Envia o e-mail silenciosamente enquanto carrega o próximo passo
+                # envia o e-mail silenciosamente enquanto carrega o próximo passo
                 with st.spinner("cruzando dados sensoriais com arquitetura de alto desempenho..."):
                     try:
                         msg = EmailMessage()
-                        msg['Subject'] = f"✦ Novo Lead Qualificado: {nome}"
+                        msg['Subject'] = f"✦ novo lead qualificado: {nome}"
                         msg['From'] = st.secrets["email"]["sender"]
                         msg['To'] = st.secrets["email"]["receiver"]
                         
-                        body = f"""NOVO LEAD CAPTADO PELA BÚSSOLA SELVA
-                        
-DADOS DE CONTATO:
-Nome: {nome}
-E-mail: {email}
-WhatsApp: {whatsapp}
-                        
-RESPOSTAS DO DIAGNÓSTICO:
-1. Manhã Ideal: {st.session_state.answers['manha']}
-2. Conexão Social: {st.session_state.answers['social']}
-3. Investimento: {st.session_state.answers['investimento']}
-4. Maior Preocupação: {st.session_state.answers['medo']}"""
+                        body = f"novo lead captado pela bússola selva\\n\\ndados de contato:\\nnome: {nome}\\ne-mail: {email}\\nwhatsapp: {whatsapp}\\n\\nrespostas do diagnóstico:\\n1. manhã ideal: {st.session_state.answers['manha']}\\n2. conexão social: {st.session_state.answers['social']}\\n3. investimento: {st.session_state.answers['investimento']}\\n4. maior preocupação: {st.session_state.answers['medo']}"
                         
                         msg.set_content(body)
                         context = ssl.create_default_context()
@@ -203,9 +183,9 @@ RESPOSTAS DO DIAGNÓSTICO:
                             server.login(st.secrets["email"]["sender"], st.secrets["email"]["password"])
                             server.send_message(msg)
                     except Exception as e:
-                        print(f"Erro no envio de email: {e}")
+                        print(f"erro no envio de email: {e}")
                     
-                    time.sleep(2) # Pausa estratégica para manter o efeito de "análise de IA"
+                    time.sleep(2) # pausa estratégica para manter o efeito de "análise de IA"
                     next_step()
                     st.rerun()
             else:
