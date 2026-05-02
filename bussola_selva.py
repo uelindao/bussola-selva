@@ -3,6 +3,7 @@ import time
 import smtplib
 from email.message import EmailMessage
 import ssl
+import html # Biblioteca adicionada para segurança (proteção contra XSS)
 
 # ── configuração da página e estilo ───────────────────────────────────────────
 st.set_page_config(page_title="bússola selva", page_icon="🌿", layout="centered")
@@ -30,7 +31,7 @@ color:#EAE8E3!important;line-height:1.1;margin-bottom:0.6rem;text-transform:lowe
 
 .question-title {font-family:'Montserrat',sans-serif; font-size:1.2rem; color:#EAE8E3; margin-bottom: 1.5rem; text-transform:lowercase; font-weight: 500;}
 
-/* estilo das opções - removido o label invisível que causava o retângulo */
+/* estilo das opções */
 .stRadio > div {display: flex; flex-direction: column; gap: 1rem;}
 .stRadio > div > label {
     background:#121211!important; border:1px solid #2A2928!important; padding: 1rem!important; 
@@ -39,15 +40,23 @@ color:#EAE8E3!important;line-height:1.1;margin-bottom:0.6rem;text-transform:lowe
 }
 .stRadio > div > label:hover {border-color: #C49A6C!important; color: #EAE8E3!important;}
 
+/* botões principais */
 .stButton>button {background:#213326!important; color:#EAE8E3!important; border:none!important; border-radius:4px!important;
 font-family:'Inter',sans-serif!important; font-weight:500!important; font-size:1rem!important;
 text-transform:lowercase!important; padding: 0.8rem 2rem!important; margin-top: 2rem; width: 100%; transition:all 0.2s ease-in-out!important;}
 .stButton>button:hover {background:#1A291E!important; color:#C49A6C!important;}
 
+/* inputs de texto */
 .stTextInput>div>div>input {background:#121211!important; border:1px solid #2A2928!important; border-radius:4px!important;
 color:#EAE8E3!important; font-family:'Inter',sans-serif!important; padding: 0.8rem!important;}
 .stTextInput>label {font-family:'Inter',sans-serif!important; font-size:0.85rem!important; color:#8C8881!important; text-transform:lowercase!important;}
 
+/* esconde o 4º input de texto da tela (Honeypot para pegar robôs) */
+div[data-testid="stVerticalBlock"] div[data-testid="stTextInput"]:nth-of-type(4) {
+    display: none !important;
+}
+
+/* caixas de resultado */
 .dossier-box {background:#121211; border: 1px solid #C49A6C; padding: 2rem; margin-top: 1rem; border-radius: 4px;}
 .dossier-title {font-family:'Montserrat',sans-serif; font-size:1.1rem; color:#C49A6C; text-transform:lowercase; letter-spacing:0.1em; margin-bottom:1rem; font-weight: 600;}
 .dossier-text {font-family:'Inter',sans-serif; font-size:0.95rem; color:#EAE8E3; line-height:1.7; text-transform:lowercase;}
@@ -147,7 +156,7 @@ elif st.session_state.step == 4:
         next_step()
         st.rerun()
 
-# ── passo 5: captação do lead e envio de e-mail ──────────────────────────────
+# ── passo 5: captação do lead e envio seguro de e-mail ───────────────────────
 elif st.session_state.step == 5:
     st.markdown("""
     <div style="text-align:center; color:#EAE8E3; font-family:'Montserrat',sans-serif; font-size:1.2rem; margin-bottom:1rem; text-transform:lowercase; font-weight:600;">
@@ -159,33 +168,47 @@ elif st.session_state.step == 5:
     """, unsafe_allow_html=True)
     
     with st.container():
-        nome = st.text_input("como devemos chamar vocês?")
-        email = st.text_input("qual o seu melhor e-mail?")
-        whatsapp = st.text_input("whatsapp com ddd")
+        nome_bruto = st.text_input("como devemos chamar vocês?")
+        email_bruto = st.text_input("qual o seu melhor e-mail?")
+        whatsapp_bruto = st.text_input("whatsapp com ddd")
+        
+        # Honeypot: Campo oculto via CSS (robôs preenchem, humanos não veem)
+        honeypot = st.text_input("campo de segurança", key="hp_campo", label_visibility="collapsed")
         
         if st.button("revelar minha casa ideal", key="btn5"):
-            if nome and email and whatsapp:
+            if nome_bruto and email_bruto and whatsapp_bruto:
+                
+                # 1. Blindagem contra XSS (limpa códigos maliciosos inseridos pelo usuário)
+                nome = html.escape(nome_bruto.strip())
+                email = html.escape(email_bruto.strip())
+                whatsapp = html.escape(whatsapp_bruto.strip())
+                
                 st.session_state.answers['lead'] = {'nome': nome, 'email': email, 'whatsapp': whatsapp}
                 
-                # envia o e-mail silenciosamente enquanto carrega o próximo passo
+                # Envia o e-mail silenciosamente enquanto carrega o próximo passo
                 with st.spinner("cruzando dados sensoriais com arquitetura de alto desempenho..."):
-                    try:
-                        msg = EmailMessage()
-                        msg['Subject'] = f"✦ novo lead qualificado: {nome}"
-                        msg['From'] = st.secrets["email"]["sender"]
-                        msg['To'] = st.secrets["email"]["receiver"]
-                        
-                        body = f"novo lead captado pela bússola selva\\n\\ndados de contato:\\nnome: {nome}\\ne-mail: {email}\\nwhatsapp: {whatsapp}\\n\\nrespostas do diagnóstico:\\n1. manhã ideal: {st.session_state.answers['manha']}\\n2. conexão social: {st.session_state.answers['social']}\\n3. investimento: {st.session_state.answers['investimento']}\\n4. maior preocupação: {st.session_state.answers['medo']}"
-                        
-                        msg.set_content(body)
-                        context = ssl.create_default_context()
-                        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-                            server.login(st.secrets["email"]["sender"], st.secrets["email"]["password"])
-                            server.send_message(msg)
-                    except Exception as e:
-                        print(f"erro no envio de email: {e}")
                     
-                    time.sleep(2) # pausa estratégica para manter o efeito de "análise de IA"
+                    # 2. Blindagem contra Spam (só envia se o robô não caiu na armadilha)
+                    if not honeypot: 
+                        try:
+                            msg = EmailMessage()
+                            # Remoção de quebras de linha para evitar Email Header Injection
+                            titulo_seguro = nome.replace('\n', '').replace('\r', '')
+                            msg['Subject'] = f"✦ novo lead qualificado: {titulo_seguro}"
+                            msg['From'] = st.secrets["email"]["sender"]
+                            msg['To'] = st.secrets["email"]["receiver"]
+                            
+                            body = f"novo lead captado pela bússola selva\n\ndados de contato:\nnome: {nome}\ne-mail: {email}\nwhatsapp: {whatsapp}\n\nrespostas do diagnóstico:\n1. manhã ideal: {st.session_state.answers['manha']}\n2. conexão social: {st.session_state.answers['social']}\n3. investimento: {st.session_state.answers['investimento']}\n4. maior preocupação: {st.session_state.answers['medo']}"
+                            
+                            msg.set_content(body)
+                            context = ssl.create_default_context()
+                            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+                                server.login(st.secrets["email"]["sender"], st.secrets["email"]["password"])
+                                server.send_message(msg)
+                        except Exception as e:
+                            print(f"erro no envio de email: {e}")
+                    
+                    time.sleep(2.5) # Pausa estratégica para o "teatro" da IA processando
                     next_step()
                     st.rerun()
             else:
@@ -201,21 +224,25 @@ elif st.session_state.step == 6:
     </div>
     """, unsafe_allow_html=True)
     
+    # 1. Lógica da Atmosfera
     if "jardim" in st.session_state.answers['manha']:
         atmosfera = "uma forte conexão com a natureza, utilizando design biofílico, jardins internos e luz natural abundante"
     else:
         atmosfera = "uma integração tecnológica total, com automação discreta e conforto invisível ditando o ritmo da rotina"
 
+    # 2. Lógica da Conexão Social
     if "cozinha" in st.session_state.answers['social']:
         coracao = "onde uma cozinha gourmet ampla e integrada será o coração pulsante da casa"
     else:
         coracao = "onde as áreas externas, com fogo de chão ou piscina natural, se tornam o refúgio perfeito para encontros"
 
+    # 3. Lógica do Sistema Construtivo
     if "sustentabilidade" in st.session_state.answers['investimento']:
         sistema = "como vocês valorizam economia de longo prazo, recomendamos fortemente sistemas construtivos modernos e sustentáveis, como o wood frame ou steel frame. eles oferecem conforto térmico superior e facilitam a integração com painéis solares e cisternas, zerando suas preocupações futuras."
     else:
         sistema = "como o foco de vocês está no melhor balanço do custo imediato, nossa estratégia será focar em um projeto executivo extremamente detalhado. isso permite otimizar o uso de materiais construtivos e alcançar uma estética de alto padrão sem desperdícios na execução."
 
+    # 4. Lógica da Dor Principal
     if "caos" in st.session_state.answers['medo']:
         solucao_dor = "sabemos que a imprevisibilidade da obra tira o sono de vocês. para garantir um cronograma cravado e uma obra limpa, a industrialização da construção aliada ao nosso detalhamento rigoroso de projeto será a chave para blindar a saúde mental de vocês."
     elif "orçamento" in st.session_state.answers['medo']:
