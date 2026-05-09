@@ -41,15 +41,18 @@ div[data-testid="stVerticalBlock"] div[data-testid="stTextInput"]:nth-of-type(4)
 .footer-socials a{color:#EAE8E3;transition:color 0.2s ease;text-decoration:none;}
 .footer-socials a:hover{color:#C49A6C;}
 .footer-copy{text-align:right;margin-top:3rem;margin-bottom:2rem;font-size:0.75rem;color:#8C8881;text-transform:lowercase;}
+.btn-cta:hover{background:#1A291E!important;color:#C49A6C!important;}
 @media(max-width:768px){.footer-container{flex-direction:column;gap:2.5rem;}.footer-col-right{text-align:left;}.footer-col-right .footer-socials{justify-content:flex-start;}.footer-copy{text-align:center;}}
 </style>
 """, unsafe_allow_html=True)
 
-# ── gerenciamento de estado (passos do wizard) ───────────────────────────────
+# ── gerenciamento de estado (passos do wizard e score) ───────────────────────
 if 'step' not in st.session_state:
     st.session_state.step = 0
 if 'answers' not in st.session_state:
     st.session_state.answers = {}
+if 'score' not in st.session_state:
+    st.session_state.score = {'classico': 0, 'minimalista': 0, 'industrial': 0}
 
 def next_step():
     st.session_state.step += 1
@@ -57,6 +60,7 @@ def next_step():
 def reset_app():
     st.session_state.step = 0
     st.session_state.answers = {}
+    st.session_state.score = {'classico': 0, 'minimalista': 0, 'industrial': 0}
 
 # ── cabeçalho global ─────────────────────────────────────────────────────────
 st.markdown("""
@@ -75,67 +79,81 @@ if st.session_state.step == 0:
     </div>
     """, unsafe_allow_html=True)
     
-    # ajuste das colunas para centralizar o botão perfeitamente
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("iniciar jornada"):
             next_step()
             st.rerun()
 
-# ── passo 1: a manhã ideal (biofilia vs tech) ────────────────────────────────
+# ── passo 1: pergunta sobre fachada ──────────────────────────────────────────
 elif st.session_state.step == 1:
-    st.markdown('<div class="question-title" style="margin-top: 2rem;">1. como é a sua manhã ideal na nova casa?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-title" style="margin-top: 2rem;">1. ao andar pela rua e olhar para uma casa, o que te para?</div>', unsafe_allow_html=True)
     
-    q1 = st.radio("escolha:", [
-        "acordar com a luz do sol filtrada por um jardim denso e tomar café sentindo a brisa",
-        "acordar com a automação abrindo as persianas e ajustando a climatização silenciosamente"
-    ], key="q1", label_visibility="collapsed")
+    opcoes = {
+        "um telhado de madeira aparente, formas equilibradas e tons neutros que convidam a entrar": "classico",
+        "linhas horizontais puras, grandes vidros e brises que enquadram a paisagem lá de fora": "minimalista",
+        "concreto bruto, esquadrias metálicas escuras e uma vegetação que parece querer engolir a construção": "industrial"
+    }
+    
+    q1 = st.radio("escolha:", list(opcoes.keys()), key="q1", label_visibility="collapsed")
     
     if st.button("próximo", key="btn1"):
-        st.session_state.answers['manha'] = q1
+        st.session_state.answers['fachada'] = q1
+        st.session_state.score[opcoes[q1]] += 1
         next_step()
         st.rerun()
 
-# ── passo 2: conexão social ──────────────────────────────────────────────────
+# ── passo 2: pergunta sobre o coração da casa ────────────────────────────────
 elif st.session_state.step == 2:
-    st.markdown('<div class="question-title" style="margin-top: 2rem;">2. quando recebem amigos, onde a magia acontece?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-title" style="margin-top: 2rem;">2. se você pudesse viver em apenas um ambiente da casa, qual seria?</div>', unsafe_allow_html=True)
     
-    q2 = st.radio("escolha:", [
-        "em uma cozinha gourmet espaçosa, integrando quem cozinha e quem conversa",
-        "na área externa, ao redor de um fogo de chão ou de uma piscina natural integrada"
-    ], key="q2", label_visibility="collapsed")
+    opcoes = {
+        "uma sala de estar com luz natural suave, sofá de linho e madeira clara ao redor": "classico",
+        "um living sem paredes, integrado à cozinha gourmet e ao deck com vista para a natureza": "minimalista",
+        "um espaço com jardim de inverno interno, pedra natural e concreto aparente no teto": "industrial"
+    }
+    
+    q2 = st.radio("escolha:", list(opcoes.keys()), key="q2", label_visibility="collapsed")
     
     if st.button("próximo", key="btn2"):
-        st.session_state.answers['social'] = q2
+        st.session_state.answers['coracao'] = q2
+        st.session_state.score[opcoes[q2]] += 1
         next_step()
         st.rerun()
 
-# ── passo 3: objeção silenciosa (valor vs preço) ─────────────────────────────
+# ── passo 3: pergunta sobre sensação ─────────────────────────────────────────
 elif st.session_state.step == 3:
-    st.markdown('<div class="question-title" style="margin-top: 2rem;">3. ao pensar no investimento, o que faz mais sentido para vocês?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-title" style="margin-top: 2rem;">3. qual palavra define o que você quer sentir ao abrir a porta da sua casa?</div>', unsafe_allow_html=True)
     
-    q3 = st.radio("escolha:", [
-        "sustentabilidade inteligente que gera economia futura (solar, cisterna), mesmo exigindo maior investimento inicial",
-        "reduzir o custo imediato da obra ao máximo, priorizando a estética antes da eficiência térmica e energética"
-    ], key="q3", label_visibility="collapsed")
+    opcoes = {
+        "serenidade — uma casa que acalma e acolhe ao mesmo tempo": "classico",
+        "liberdade — espaços abertos, sem barreiras, integrados com o mundo lá fora": "minimalista",
+        "força — uma casa com personalidade própria, que não se parece com nenhuma outra": "industrial"
+    }
+    
+    q3 = st.radio("escolha:", list(opcoes.keys()), key="q3", label_visibility="collapsed")
     
     if st.button("próximo", key="btn3"):
-        st.session_state.answers['investimento'] = q3
+        st.session_state.answers['sensacao'] = q3
+        st.session_state.score[opcoes[q3]] += 1
         next_step()
         st.rerun()
 
-# ── passo 4: medos reais ─────────────────────────────────────────────────────
+# ── passo 4: pergunta sobre investimento ─────────────────────────────────────
 elif st.session_state.step == 4:
-    st.markdown('<div class="question-title" style="margin-top: 2rem;">4. qual é a sua maior preocupação ao pensar em construir?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-title" style="margin-top: 2rem;">4. ao pensar no investimento, o que faz mais sentido para vocês?</div>', unsafe_allow_html=True)
     
-    q4 = st.radio("escolha:", [
-        "a obra virar um caos, com imprevisibilidade, retrabalhos e atrasos",
-        "estourar o orçamento sem controle prévio ou aviso",
-        "a casa ficar parecendo 'de catálogo', genérica e sem a nossa identidade"
-    ], key="q4", label_visibility="collapsed")
+    opcoes = {
+        "materiais de qualidade e acabamentos atemporais que valorizem o imóvel a cada ano": "classico",
+        "autossuficiência: painéis solares, sistemas modernos e uma obra enxuta sem desperdício": "minimalista",
+        "impacto visual e originalidade — mesmo que exija materiais especiais e soluções únicas": "industrial"
+    }
+    
+    q4 = st.radio("escolha:", list(opcoes.keys()), key="q4", label_visibility="collapsed")
     
     if st.button("próximo", key="btn4"):
-        st.session_state.answers['medo'] = q4
+        st.session_state.answers['investimento'] = q4
+        st.session_state.score[opcoes[q4]] += 1
         next_step()
         st.rerun()
 
@@ -161,17 +179,38 @@ elif st.session_state.step == 5:
         if st.button("revelar minha casa ideal", key="btn5"):
             if nome_bruto and email_bruto and whatsapp_bruto:
                 
-                # 1. blindagem contra xss
+                # blindagem contra xss
                 nome = html.escape(nome_bruto.strip())
                 email = html.escape(email_bruto.strip())
                 whatsapp = html.escape(whatsapp_bruto.strip())
                 
                 st.session_state.answers['lead'] = {'nome': nome, 'email': email, 'whatsapp': whatsapp}
                 
+                # lógica de desempate: industrial > minimalista > clássico
+                score = st.session_state.score
+                vencedor = "classico"
+                max_pts = score["classico"]
+                
+                if score["minimalista"] >= max_pts:
+                    vencedor = "minimalista"
+                    max_pts = score["minimalista"]
+                    
+                if score["industrial"] >= max_pts:
+                    vencedor = "industrial"
+                    max_pts = score["industrial"]
+                
+                st.session_state.answers['estilo'] = vencedor
+                
+                nomes_estilos = {
+                    "classico": "clássico atemporal",
+                    "minimalista": "minimalismo sustentável",
+                    "industrial": "industrial biofílico"
+                }
+                nome_estilo_vencedor = nomes_estilos[vencedor]
+                
                 # envia o e-mail silenciosamente
                 with st.spinner("cruzando dados sensoriais com arquitetura de alto desempenho..."):
                     
-                    # 2. blindagem contra spam
                     if not honeypot: 
                         try:
                             msg = EmailMessage()
@@ -180,7 +219,21 @@ elif st.session_state.step == 5:
                             msg['From'] = st.secrets["email"]["sender"]
                             msg['To'] = st.secrets["email"]["receiver"]
                             
-                            body = f"novo lead captado pela bússola selva\n\ndados de contato:\nnome: {nome}\ne-mail: {email}\nwhatsapp: {whatsapp}\n\nrespostas do diagnóstico:\n1. manhã ideal: {st.session_state.answers['manha']}\n2. conexão social: {st.session_state.answers['social']}\n3. investimento: {st.session_state.answers['investimento']}\n4. maior preocupação: {st.session_state.answers['medo']}"
+                            body = f"""novo lead captado pela bússola selva
+
+dados de contato:
+nome: {nome}
+e-mail: {email}
+whatsapp: {whatsapp}
+
+respostas do diagnóstico:
+1. fachada: {st.session_state.answers['fachada']}
+2. coração da casa: {st.session_state.answers['coracao']}
+3. sensação: {st.session_state.answers['sensacao']}
+4. investimento: {st.session_state.answers['investimento']}
+
+estilo identificado: {nome_estilo_vencedor}
+pontuação: clássico atemporal: {score['classico']} | minimalismo sustentável: {score['minimalista']} | industrial biofílico: {score['industrial']}"""
                             
                             msg.set_content(body)
                             context = ssl.create_default_context()
@@ -199,48 +252,71 @@ elif st.session_state.step == 5:
 # ── passo 6: dossiê final ────────────────────────────────────────────────────
 elif st.session_state.step == 6:
     nome_casal = st.session_state.answers['lead']['nome']
-        
+    estilo_vencedor = st.session_state.answers['estilo']
+    
+    dados_projetos = {
+        "classico": {
+            "texto": "o perfil de vocês aponta para uma arquitetura de elegância atemporal. não é sobre tendência — é sobre permanência. nossa proposta será criar uma casa com volumetria equilibrada, telhado amadeirado, formas orgânicas e uma paleta neutra que aquece sem pesar. cada detalhe será pensado para que a luz natural percorra os ambientes de maneira suave, criando uma atmosfera de serenidade absoluta. o mobiliário seguirá linhas fluidas — linho, bouclé, madeira clara — em harmonia perfeita com o que existe do lado de fora. uma casa que envelhece com elegância, como vocês.",
+            "img": "https://static.wixstatic.com/media/4067bd_09c81922336348faab4bcd1304079e96~mv2.png/v1/fill/w_1920,h_734,q_90,enc_avif,quality_auto/4067bd_09c81922336348faab4bcd1304079e96~mv2.png",
+            "url": "https://www.selvaurbanaprojetos.com.br/projetos/casa-k%26a",
+            "cta": "ver projeto: casa k&a",
+            "legenda": "casa k&a — porto alegre, rs"
+        },
+        "minimalista": {
+            "texto": "vocês pertencem à arquitetura que recusa o supérfluo. linhas horizontais puras, planta completamente livre e grandes panos de vidro que enquadram a paisagem como se ela fosse parte do projeto — porque ela é. nossa proposta será uma residência em steel frame, leve e autossuficiente: painéis fotovoltaicos integrados à cobertura, brises articulados que dominam a luminosidade, e um deck que dissolve a fronteira entre o dentro e o fora. o conforto aqui não é decorativo, é estrutural. uma casa que trabalha por vocês, silenciosamente.",
+            "img": "https://static.wixstatic.com/media/4067bd_dcc4e7c998e04a768e0df45b6931560e~mv2.png/v1/fit/w_960,h_353,q_90,enc_avif,quality_auto/4067bd_dcc4e7c998e04a768e0df45b6931560e~mv2.png",
+            "url": "https://www.selvaurbanaprojetos.com.br/projetos/casa-b%26j",
+            "cta": "ver projeto: casa b&j",
+            "legenda": "casa b&j — arroio do meio, rs"
+        },
+        "industrial": {
+            "texto": "o perfil de vocês é o mais potente que existe: quem não tem medo de materiais brutos. concreto aparente, esquadrias metálicas pretas, painéis de madeira ripada — e então, quebrando tudo isso, uma vegetação que abraça a construção por dentro e por fora. nossa proposta será criar uma casa com presença e identidade própria, onde a rigidez dos materiais industriais é permanentemente subvertida pela vida que pulsa nos jardins verticais e aberturas estratégicas. uma casa que não imita nada. uma casa que só poderia ser de vocês.",
+            "img": "https://static.wixstatic.com/media/4067bd_2cb29b55883746f0abfd36292493f016~mv2.webp/v1/fit/w_1920,h_702,q_90,enc_avif,quality_auto/4067bd_2cb29b55883746f0abfd36292493f016~mv2.webp",
+            "url": "https://www.selvaurbanaprojetos.com.br/projetos/casa-d%26a",
+            "cta": "ver projeto: casa d&a",
+            "legenda": "casa d&a — arroio do meio, rs"
+        }
+    }
+    
+    projeto = dados_projetos[estilo_vencedor]
+
     st.markdown(f"""
     <div style="text-align:center; color:#EAE8E3; font-family:'Montserrat',sans-serif; font-size:1.5rem; margin-bottom:2rem; text-transform:lowercase; font-weight:600;">
         olá, {nome_casal}. bem-vindos ao futuro de vocês.
     </div>
     """, unsafe_allow_html=True)
     
-    if "jardim" in st.session_state.answers['manha']:
-        atmosfera = "uma forte conexão com a natureza, utilizando design biofílico, jardins internos e luz natural abundante"
-    else:
-        atmosfera = "uma integração tecnológica total, com automação discreta e conforto invisível ditando o ritmo da rotina"
-
-    if "cozinha" in st.session_state.answers['social']:
-        coracao = "onde uma cozinha gourmet ampla e integrada será o coração pulsante da casa"
-    else:
-        coracao = "onde as áreas externas, com fogo de chão ou piscina natural, se tornam o refúgio perfeito para encontros"
-
-    if "sustentabilidade" in st.session_state.answers['investimento']:
-        sistema = "como vocês valorizam economia de longo prazo, recomendamos fortemente sistemas construtivos modernos e sustentáveis, como o wood frame ou steel frame. eles oferecem conforto térmico superior e facilitam a integração com painéis solares e cisternas, zerando suas preocupações futuras."
-    else:
-        sistema = "como o foco de vocês está no melhor balanço do custo imediato, nossa estratégia será focar em um projeto executivo extremamente detalhado. isso permite otimizar o uso de materiais construtivos e alcançar uma estética de alto padrão sem desperdícios na execução."
-
-    if "caos" in st.session_state.answers['medo']:
-        solucao_dor = "sabemos que a imprevisibilidade da obra tira o sono de vocês. para garantir um cronograma cravado e uma obra limpa, a industrialização da construção aliada ao nosso detalhamento rigoroso de projeto será a chave para blindar a saúde mental de vocês."
-    elif "orçamento" in st.session_state.answers['medo']:
-        solucao_dor = "notamos que estourar o orçamento é o maior receio de vocês. o antídoto para isso é a tecnologia que utilizamos em nosso escritório: nós construímos a sua casa virtualmente antes do primeiro tijolo, garantindo quantitativos exatos e blindando o seu bolso contra surpresas."
-    else:
-        solucao_dor = "percebemos que o pavor de vocês é acabar com uma 'casa de catálogo'. nosso compromisso será desenhar uma arquitetura com identidade profunda, fugindo de tendências genéricas e criando detalhes únicos que reflitam exclusivamente a história do casal."
-
     st.markdown(f"""
     <div class="dossier-box">
         <div class="dossier-title">✦ dossiê de viabilidade selva</div>
         <div class="dossier-text">
-            analisamos o perfil de vocês e a visão está clara: o projeto ideal exige {atmosfera}, {coracao}.<br><br>
-            {sistema}<br><br>
-            além disso, {solucao_dor}<br><br>
-            vocês não precisam de apenas uma planta. vocês precisam de um ecossistema completo e pensado para a vida de vocês.
+            {projeto['texto']}
         </div>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
+    
+    st.image(projeto['img'], use_container_width=True)
+    st.markdown(f"<div style='text-align:center; color:#8C8881; font-size:0.85rem; font-family:\"Inter\",sans-serif; text-transform:lowercase; margin-top:0.5rem;'>{projeto['legenda']}</div>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    <div style="text-align:center; margin-top:2.5rem; margin-bottom:2.5rem;">
+        <a href="{projeto['url']}" class="btn-cta" target="_blank" style="
+            display:inline-block;
+            background:#2E4534;
+            color:#EAE8E3;
+            font-family:'Inter',sans-serif;
+            font-size:1rem;
+            font-weight:500;
+            text-transform:lowercase;
+            text-decoration:none;
+            padding:0.8rem 2rem;
+            border-radius:4px;
+            transition:all 0.2s ease;
+        ">{projeto['cta']} →</a>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("""
     <div style="text-align:center; color:#8C8881; font-family:'Inter',sans-serif; font-size:0.95rem; margin-bottom:1rem; text-transform:lowercase;">
