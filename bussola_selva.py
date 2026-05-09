@@ -27,7 +27,7 @@ html,body,.stApp{background:#161615!important;color:#EAE8E3!important;font-famil
 .stButton>button:hover{background:#1A291E!important;color:#C49A6C!important;}
 .stTextInput>div>div>input{background:#121211!important;border:1px solid #2A2928!important;border-radius:4px!important;color:#EAE8E3!important;font-family:'Inter',sans-serif!important;padding:0.8rem!important;}
 .stTextInput>label{font-family:'Inter',sans-serif!important;font-size:0.85rem!important;color:#8C8881!important;text-transform:lowercase!important;}
-div[data-testid="stVerticalBlock"] div[data-testid="stTextInput"]:nth-of-type(4){display:none !important;}
+div[data-testid="stTextArea"]{display:none !important;} /* esconde a nova armadilha de texto longo */
 .dossier-box{background:#121211;border:1px solid #C49A6C;padding:2rem;margin-top:1rem;border-radius:4px;}
 .dossier-title{font-family:'Montserrat',sans-serif;font-size:1.1rem;color:#C49A6C;text-transform:lowercase;letter-spacing:0.1em;margin-bottom:1rem;font-weight:600;}
 .dossier-text{font-family:'Inter',sans-serif;font-size:0.95rem;color:#EAE8E3;line-height:1.7;text-transform:lowercase;}
@@ -159,6 +159,11 @@ elif st.session_state.step == 4:
 
 # ── passo 5: captação do lead e envio seguro de e-mail ───────────────────────
 elif st.session_state.step == 5:
+    
+    # inicia o cronômetro assim que a tela carrega
+    if 'tempo_inicio_form' not in st.session_state:
+        st.session_state.tempo_inicio_form = time.time()
+        
     st.markdown("""
     <div style="text-align:center; color:#EAE8E3; font-family:'Montserrat',sans-serif; font-size:1.2rem; margin-bottom:1rem; text-transform:lowercase; font-weight:600;">
         sua essência foi mapeada.
@@ -173,11 +178,14 @@ elif st.session_state.step == 5:
         email_bruto = st.text_input("qual o seu melhor e-mail?")
         whatsapp_bruto = st.text_input("whatsapp com ddd")
         
-        # honeypot: campo oculto via css (robôs preenchem, humanos não veem)
-        honeypot = st.text_input("campo de segurança", key="hp_campo", label_visibility="collapsed")
+        # blindagem 1: área de texto escondida (autofill ignora, robôs preenchem)
+        honeypot_txt = st.text_area("deixe este campo completamente vazio", key="hp_area", label_visibility="collapsed")
         
         if st.button("revelar minha casa ideal", key="btn5"):
             if nome_bruto and email_bruto and whatsapp_bruto:
+                
+                # blindagem 2: checa se preencheu rápido demais (menos de 2 segundos = bot)
+                tempo_decorrido = time.time() - st.session_state.tempo_inicio_form
                 
                 # blindagem contra xss
                 nome = html.escape(nome_bruto.strip())
@@ -208,10 +216,10 @@ elif st.session_state.step == 5:
                 }
                 nome_estilo_vencedor = nomes_estilos[vencedor]
                 
-                # envia o e-mail silenciosamente
-                with st.spinner("cruzando dados sensoriais com arquitetura de alto desempenho..."):
+                # dupla checagem: campo invisível tem que estar vazio E o tempo de preenchimento tem que ser plausível
+                if honeypot_txt == "" and tempo_decorrido > 2.0:
                     
-                    if not honeypot: 
+                    with st.spinner("cruzando dados sensoriais com arquitetura de alto desempenho..."):
                         try:
                             msg = EmailMessage()
                             titulo_seguro = nome.replace('\n', '').replace('\r', '')
@@ -240,10 +248,17 @@ pontuação: clássico atemporal: {score['classico']} | minimalismo sustentável
                             with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
                                 server.login(st.secrets["email"]["sender"], st.secrets["email"]["password"])
                                 server.send_message(msg)
+                                
+                            time.sleep(1.5)
+                            next_step()
+                            st.rerun()
+                            
                         except Exception as e:
                             print(f"erro no envio de email: {e}")
-                    
-                    time.sleep(2.5)
+                            st.error(f"erro detalhado do email: {e}")
+                else:
+                    # caiu na armadilha: simula processamento e vai para a tela final sem mandar email
+                    time.sleep(1.5)
                     next_step()
                     st.rerun()
             else:
@@ -297,7 +312,7 @@ elif st.session_state.step == 6:
     
     st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
     
-    st.image(projeto['img'], use_container_width=True)
+    st.image(projeto['img'], width="stretch")
     st.markdown(f"<div style='text-align:center; color:#8C8881; font-size:0.85rem; font-family:\"Inter\",sans-serif; text-transform:lowercase; margin-top:0.5rem;'>{projeto['legenda']}</div>", unsafe_allow_html=True)
     
     st.markdown(f"""
